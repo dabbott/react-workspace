@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import cssLayout from 'css-layout'
-
 import clone from 'lodash.clonedeep'
+
+import Pane from './Pane'
 
 const styles = {
   main: {
@@ -42,6 +43,40 @@ export default class extends React.Component {
     }
   }
 
+  renderChildren(layoutNode, children) {
+    const {resizable} = layoutNode
+    const direction = layoutNode.style.flexDirection ?
+      layoutNode.style.flexDirection :
+      'column'
+
+    return children.map((childNode, i) => {
+      const item = this.renderItem(childNode)
+
+      if (resizable) {
+        const size = direction === 'column' ? childNode.layout.height : childNode.layout.width
+
+        let edge = 'NONE'
+        if (i < children.length - 1) {
+          edge = direction === 'column' ? 'BOTTOM' : 'RIGHT'
+        }
+
+        // console.log('len', children.length, 'size', size, i, 'edge', edge)
+
+        return (
+          <Pane
+            size={size}
+            resizableEdge={edge}
+            onResize={(value) => console.log('value', value)}
+          >
+            {item}
+          </Pane>
+        )
+      } else {
+        return item
+      }
+    })
+  }
+
   renderItem(layoutNode) {
     const {id, layout, children} = layoutNode
     const {components} = this.props
@@ -50,9 +85,14 @@ export default class extends React.Component {
     // console.log('rendering', id, layoutNode)
 
     return React.cloneElement(component, {
-      style: {...layout, ...component.props.style, position: 'absolute'},
+      style: {
+        ...layout,
+        ...component.props.style,
+        position: 'absolute',
+        overflow: 'hidden',
+      },
       children: children.length > 0 ?
-        children.map(this.renderItem.bind(this)) :
+        this.renderChildren(layoutNode, children) :
         component.props.children,
       width: layout.width,
       height: layout.height,

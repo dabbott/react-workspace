@@ -22,6 +22,7 @@ const layout = {
     width: window.innerWidth,
     height: window.innerHeight,
   },
+  resizable: true,
   children: [
     {
       id: 'toolbar',
