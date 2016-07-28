@@ -51,19 +51,24 @@ export default class extends React.Component {
 
     return children.map((childNode, i) => {
       const item = this.renderItem(childNode)
+      const layout = childNode.layout
 
       if (resizable) {
-        const size = direction === 'column' ? childNode.layout.height : childNode.layout.width
+        const size = direction === 'column' ? layout.height : layout.width
 
-        let edge = 'NONE'
+        let edge = 'none'
         if (i < children.length - 1) {
-          edge = direction === 'column' ? 'BOTTOM' : 'RIGHT'
+          edge = direction === 'column' ? 'bottom' : 'right'
         }
 
         // console.log('len', children.length, 'size', size, i, 'edge', edge)
 
         return (
           <Pane
+            style={{
+              ...layout,
+              position: 'absolute',
+            }}
             size={size}
             resizableEdge={edge}
             onResize={(value) => console.log('value', value)}

@@ -1,7 +1,7 @@
 import React, { Component, } from 'react'
 import clamp from 'lodash.clamp'
 
-const AXIS = {
+export const AXIS = {
   X: 'x',
   Y: 'y',
 }
@@ -25,8 +25,6 @@ export default class extends Component {
     axis: AXIS.Y,
     reverse: false,
   }
-
-  static AXIS = AXIS
 
   constructor(props) {
     super(props)

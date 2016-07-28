@@ -1,12 +1,12 @@
 import React, { Component, } from 'react'
-import DragToChangeValue from './DragToChangeValue'
+import DragToChangeValue, { AXIS, } from './DragToChangeValue'
 
-const RESIZABLE_EDGE = {
-  LEFT: 'LEFT',
-  RIGHT: 'RIGHT',
-  TOP: 'TOP',
-  BOTTOM: 'BOTTOM',
-  NONE: 'NONE',
+export const RESIZABLE_EDGE = {
+  LEFT: 'left',
+  RIGHT: 'right',
+  TOP: 'top',
+  BOTTOM: 'bottom',
+  NONE: 'none',
 }
 
 export default class extends Component {
@@ -25,84 +25,50 @@ export default class extends Component {
     onResize: () => {},
   }
 
-  static RESIZABLE_EDGE = RESIZABLE_EDGE
+  getHandleStyle(axis, draggableSize, resizableEdge) {
+    const style = {
+      zIndex: 1000,
+      position: 'absolute',
+      width: axis === AXIS.X ? draggableSize : '100%',
+      height: axis === AXIS.Y ? draggableSize : '100%',
+      cursor: axis === AXIS.X ? 'col-resize' : 'row-resize',
+      backgroundColor: 'red',
+    }
+
+    switch (resizableEdge) {
+      case RESIZABLE_EDGE.LEFT:
+        return {...style, left: 0, top: 0}
+      case RESIZABLE_EDGE.RIGHT:
+        return {...style, right: 0, top: 0}
+      case RESIZABLE_EDGE.TOP:
+        return {...style, left: 0, top: 0}
+      case RESIZABLE_EDGE.BOTTOM:
+        return {...style, left: 0, bottom: 0}
+    }
+  }
 
   render() {
-    const style = {
-      width: this.props.size,
-      height: '100%',
-      position: 'relative',
-      flexDirection: 'column',
-      alignItems: 'stretch',
-    }
-
-    const draggableStyle = {
-      zIndex: 1000,
-      width: this.props.draggableSize,
-      position: 'absolute',
-      height: '100%',
-      backgroundColor: 'red',
-      cursor: 'col-resize',
-    }
-
-    let axis = DragToChangeValue.AXIS.X
-
-    if (this.props.resizableEdge === RESIZABLE_EDGE.TOP ||
-        this.props.resizableEdge === RESIZABLE_EDGE.BOTTOM) {
-
-      axis = DragToChangeValue.AXIS.Y
-
-      Object.assign(style, {
-        width: '100%',
-        height: this.props.size,
-      })
-
-      Object.assign(draggableStyle, {
-        width: '100%',
-        height: this.props.draggableSize,
-        cursor: 'row-resize',
-      })
-    }
-
-    switch (this.props.resizableEdge) {
-      case RESIZABLE_EDGE.LEFT:
-        draggableStyle.left = 0
-        draggableStyle.top = 0
-      break
-      case RESIZABLE_EDGE.RIGHT:
-        draggableStyle.right = 0
-        draggableStyle.top = 0
-      break
-      case RESIZABLE_EDGE.TOP:
-        draggableStyle.left = 0
-        draggableStyle.top = 0
-      break
-      case RESIZABLE_EDGE.BOTTOM:
-        draggableStyle.left = 0
-        draggableStyle.bottom = 0
-      break
-      default:
-        draggableStyle.display = 'none'
-      break
-    }
-
-    const reverse = this.props.resizableEdge === RESIZABLE_EDGE.LEFT ||
-        this.props.resizableEdge === RESIZABLE_EDGE.TOP ? false : true
+    const {style, resizableEdge, draggableSize, children, min, max, size, onResize} = this.props
+    const axis = resizableEdge === RESIZABLE_EDGE.TOP || resizableEdge === RESIZABLE_EDGE.BOTTOM ? AXIS.Y : AXIS.X
+    const reverse = resizableEdge === RESIZABLE_EDGE.LEFT || resizableEdge === RESIZABLE_EDGE.TOP ? false : true
+    const visible = resizableEdge !== RESIZABLE_EDGE.NONE
+    const draggableStyle = this.getHandleStyle(axis, draggableSize, resizableEdge)
 
     return (
-      <div style={style}
-        className={'pane'}>
-        <DragToChangeValue
-          style={draggableStyle}
-          min={this.props.min}
-          max={this.props.max}
-          value={this.props.size}
-          axis={axis}
-          reverse={reverse}
-          onChange={this.props.onResize}
-        />
-        <div style={this.props.style}>
-          {this.props.children}
+      <div style={style}>
+        {visible && (
+          <DragToChangeValue
+            style={draggableStyle}
+            min={min}
+            max={max}
+            value={size}
+            axis={axis}
+            reverse={reverse}
+            onChange={onResize}
+          />
+        )}
+        <div style={style}>
+          {children}
         </div>
       </div>
     )
