@@ -1,68 +1,70 @@
 import React, { Component } from 'react'
+import cssLayout from 'css-layout'
 
-export const components = {
-  a: <div style={{backgroundColor: 'rgba(0,255,255,0.2)'}}>a</div>,
-  b: <div style={{backgroundColor: 'rgba(0,255,255,0.4)'}}>b</div>,
-  c: <div style={{backgroundColor: 'rgba(0,255,255,0.6)'}}>c</div>,
-  d: <div style={{backgroundColor: 'rgba(255,0,255,0.3)'}}>d</div>,
-  e: <div style={{backgroundColor: 'rgba(255,0,255,0.6)'}}>e</div>,
+import clone from 'lodash.clonedeep'
+
+const styles = {
+  main: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    flexShrink: 0,
+    alignContent: 'flex-start',
+
+    position: 'relative',
+    boxSizing: 'border-box',
+    border: '0 solid black',
+    margin: 0,
+    padding: 0,
+    minWidth: 0,
+  }
 }
 
-export const layout = [
-  {
-    id: 'a',
-    flex: '0 0 200px',
-    flexDirection: 'column',
-    children: [
-      {
-        id: 'd',
-        flex: '1 1 auto',
-      },
-      {
-        id: 'e',
-        flex: '0 0 100px',
-      },
-    ]
-  },
-  {
-    id: 'b',
-    flex: '1 1 auto',
-  },
-  {
-    id: 'c',
-    flex: '0 0 300px',
-  },
-]
-
 export default class extends React.Component {
-  renderItem({id, flex, flexDirection, children}) {
-    const component = this.props.components[id]
-    const style = {
-      display: 'flex',
-      flexDirection,
-      flex,
+
+  constructor(props) {
+    super()
+
+    this.state = this.mapPropsToState(props)
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.mapPropsToState(nextProps))
+  }
+
+  mapPropsToState(props) {
+    const layout = clone(props.layout)
+    cssLayout(layout)
+
+    return {
+      layout,
     }
+  }
+
+  renderItem(layoutNode) {
+    const {id, layout, children} = layoutNode
+    const {components} = this.props
+    const component = components[id] || <div />
+
+    // console.log('rendering', id, layoutNode)
+
     return React.cloneElement(component, {
-      style: {
-        ...component.props.style,
-        ...style,
-      },
-      children: children ?
+      style: {...layout, ...component.props.style, position: 'absolute'},
+      children: children.length > 0 ?
         children.map(this.renderItem.bind(this)) :
         component.props.children,
+      width: layout.width,
+      height: layout.height,
     })
   }
 
   render() {
-    const style = {
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'stretch',
-    }
+    const {layout} = this.state
+
     return (
-      <div style={style}>
-        {this.props.layout.map(this.renderItem.bind(this))}
+      <div style={styles.main}>
+        {this.renderItem(layout)}
       </div>
     )
   }
