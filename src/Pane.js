@@ -67,9 +67,7 @@ export default class extends Component {
             onChange={onResize}
           />
         )}
-        <div style={style}>
-          {children}
-        </div>
+        {children}
       </div>
     )
   }

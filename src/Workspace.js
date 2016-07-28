@@ -43,65 +43,50 @@ export default class extends React.Component {
     }
   }
 
-  renderChildren(layoutNode, children) {
-    const {resizable} = layoutNode
-    const direction = layoutNode.style.flexDirection ?
-      layoutNode.style.flexDirection :
-      'column'
+  getResizeOptions(node, lastChild) {
+    const {style, layout} = node
+    const direction = style.flexDirection ? style.flexDirection : 'column'
+    const size = direction === 'column' ? layout.height : layout.width
+    const edge = lastChild ? 'none' : direction === 'column' ? 'bottom' : 'right'
 
-    return children.map((childNode, i) => {
-      const item = this.renderItem(childNode)
-      const layout = childNode.layout
-
-      if (resizable) {
-        const size = direction === 'column' ? layout.height : layout.width
-
-        let edge = 'none'
-        if (i < children.length - 1) {
-          edge = direction === 'column' ? 'bottom' : 'right'
-        }
-
-        // console.log('len', children.length, 'size', size, i, 'edge', edge)
-
-        return (
-          <Pane
-            style={{
-              ...layout,
-              position: 'absolute',
-            }}
-            size={size}
-            resizableEdge={edge}
-            onResize={(value) => console.log('value', value)}
-          >
-            {item}
-          </Pane>
-        )
-      } else {
-        return item
-      }
-    })
+    return {direction, size, edge}
   }
 
-  renderItem(layoutNode) {
-    const {id, layout, children} = layoutNode
+  renderItem(node, lastChild = true) {
+    const {id, layout, children, resizable} = node
     const {components} = this.props
     const component = components[id] || <div />
+    const {direction, size, edge} = this.getResizeOptions(node, lastChild)
 
-    // console.log('rendering', id, layoutNode)
-
-    return React.cloneElement(component, {
-      style: {
-        ...layout,
-        ...component.props.style,
-        position: 'absolute',
-        overflow: 'hidden',
-      },
-      children: children.length > 0 ?
-        this.renderChildren(layoutNode, children) :
-        component.props.children,
-      width: layout.width,
-      height: layout.height,
-    })
+    return (
+      <Pane
+        size={size}
+        resizableEdge={edge}
+        style={{
+          ...layout,
+          position: 'absolute',
+          overflow: 'hidden',
+        }}
+        onResize={(value) => console.log('value', value)}
+      >
+        {React.cloneElement(component, {
+          style: {
+            ...component.props.style,
+            width: layout.width,
+            height: layout.height,
+            position: 'absolute',
+            overflow: 'hidden',
+          },
+          children: children.length > 0 ?
+            children.map((childNode, i) => {
+              return this.renderItem(childNode, i === children.length - 1)
+            }) :
+            component.props.children,
+          width: layout.width,
+          height: layout.height,
+        })}
+      </Pane>
+    )
   }
 
   render() {
