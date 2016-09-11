@@ -9,7 +9,7 @@ module.exports = {
     port: 3001,
   },
   entry: {
-    index: path.join(DIRECTORY, 'index.js'),
+    example: path.join(DIRECTORY, 'example.js'),
   },
   module: {
     loaders: [

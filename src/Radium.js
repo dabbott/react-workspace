@@ -187,6 +187,7 @@ export default function enhanceWithRadium(component) {
           }
 
           const {key, props = {}} = child
+          const {style = {}} = props
           const childKeyPath = `${keyPath}${key}`
           const childIndexPath = `${indexPath}.${i}`
           const layout = layoutMap[childKeyPath].layout
@@ -194,7 +195,7 @@ export default function enhanceWithRadium(component) {
 
           const cloned = React.cloneElement(child, {
             style: {
-              ...props.style,
+              ...style,
               width: layout.width,
               height: layout.height,
               position: 'absolute',
@@ -206,7 +207,7 @@ export default function enhanceWithRadium(component) {
               childKeyPath,
               childIndexPath,
               props.resizable || props['data-resizable'] ?
-                this.getResizableEdge(props.style && props.style.flexDirection) :
+                this.getResizableEdge(style.flexDirection) :
                 'none'
             ),
             width: layout.width,
@@ -217,13 +218,42 @@ export default function enhanceWithRadium(component) {
 
           // console.log(lastChild, childKeyPath, i, children.length)
 
+          const dimension = resizableEdge === 'bottom' ? 'height' : 'width'
+          const minDimension = resizableEdge === 'bottom' ? 'minHeight' : 'minWidth'
+          const maxDimension = resizableEdge === 'bottom' ? 'maxHeight' : 'maxWidth'
+
+          let min = style[minDimension] || 0
+          let max = style[maxDimension] || Infinity
+
+          // console.log(style, layout)
+
+          // console.log(keyPath, min, style[dimension], max)
+
+          if (!style[dimension] && !lastChild) {
+            const nextChild = children[i + 1]
+            const total = layout[dimension] + nextChild.props.style[dimension]
+
+            if (nextChild.props.style[maxDimension]) {
+              min = Math.max(total - nextChild.props.style[maxDimension], 0)
+            }
+
+            if (nextChild.props.style[minDimension]) {
+              max = Math.max(total - nextChild.props.style[minDimension], 0)
+            }
+
+            console.log(min, layout[dimension], max)
+          }
+
           return (
             <Pane
               key={key}
-              size={resizableEdge === 'bottom' ? layout.height : layout.width}
+              min={min}
+              max={max}
+              size={layout[dimension]}
               resizableEdge={lastChild ? 'none' : resizableEdge}
               style={{...layout, position: 'absolute'}}
               onResize={(value) => {
+                console.log(value)
                 // console.log('resizing', childKeyPath, childIndexPath, child)
                 this.onResize(resizableEdge, childIndexPath, layout, value)
               }}
