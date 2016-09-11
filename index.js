@@ -16,141 +16,74 @@ const style = {
   overflow: 'hidden',
 }
 
-const LeftPane = Enhancer(class extends Component {
-  render() {
-    return (
-      <div
-        style={{backgroundColor: 'rgba(0,255,255,0.4)'}}
-      >
-        leftPane
-      </div>
-    )
-  }
-})
+const styles = {
+  main: {
+    flex: 1,
+    flexDirection: 'column',
+    width: window.innerWidth,
+    height: window.innerHeight,
+  },
+  toolbar: {
+    flex: 0,
+    height: 40,
+  },
+  content: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  leftPane: {
+    flex: 0,
+    width: 200,
+  },
+  centerPane: {
+    flex: 1,
+  },
+  rightPane: {
+    flex: 0,
+    width: 250,
+  },
+}
 
-const RightPane = Enhancer(class extends Component {
-  render() {
-    return (
-      <div
-        style={{backgroundColor: 'rgba(0,255,255,0.6)'}}
-      >
-        rightPane
-      </div>
-    )
-  }
-})
-
-const Toolbar = Enhancer(class extends Component {
-  render() {
-    return (
-      <div
-        style={{backgroundColor: 'rgba(255,0,255,0.3)'}}
-      >
-        toolbar
-      </div>
-    )
-  }
-})
-
-const CenterPane = Enhancer(class extends Component {
-  render() {
-    return (
-      <div
-        style={{backgroundColor: 'rgba(255,0,255,0.6)'}}
-      >
-        centerPane
-      </div>
-    )
-  }
-})
-
-const Content = Enhancer(class extends Component {
-  render() {
-    return (
-      <div
-        style={{backgroundColor: 'rgba(0,255,255,0.2)'}}
-      >
-        {this.props.children}
-      </div>
-    )
-  }
-})
-
-const Main = Enhancer(class extends Component {
-  render() {
-    return (
-      <div
-        style={{backgroundColor: 'rgba(0,255,255,0.2)'}}
-      >
-        {this.props.children}
-      </div>
-    )
-  }
-})
+/*
+<div style={{backgroundColor: 'rgba(0,255,255,0.4)'}}>leftPane</div>
+<div style={{backgroundColor: 'rgba(0,255,255,0.6)'}}>rightPane</div>
+<div style={{backgroundColor: 'rgba(255,0,255,0.3)'}}>toolbar</div>
+<div style={{backgroundColor: 'rgba(255,0,255,0.6)'}}>centerPane</div>
+<div style={{backgroundColor: 'rgba(0,255,255,0.2)'}}></div>
+<div style={{backgroundColor: 'rgba(0,255,255,0.2)'}}></div>
+*/
 
 class Root extends Component {
   constructor() {
     super()
-
-    this.state = {
-      styles: {
-        main: {
-          flex: 1,
-          flexDirection: 'column',
-          width: window.innerWidth,
-          height: window.innerHeight,
-        },
-        toolbar: {
-          flex: 0,
-          height: 40,
-        },
-        content: {
-          flex: 1,
-          flexDirection: 'row',
-        },
-        leftPane: {
-          flex: 0,
-          width: 200,
-        },
-        centerPane: {
-          flex: 1,
-        },
-        rightPane: {
-          flex: 0,
-          width: 250,
-        },
-      }
-    }
   }
 
   render() {
-    const {styles} = this.state
-
     return (
       <div style={style}>
-        <Workspace
-          id={'workspace1'}
-        >
-          <Main
-            resizable={true}
-            id={'main'}
-            style={styles.main}
-          >
-            <Toolbar
-              id={'toolbar'}
-              style={styles.toolbar}
-            />
-            <Content
-              id={'content'}
-              style={styles.content}
-            >
-
-            </Content>
-          </Main>
-        </Workspace>
+        <div style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,255,255,0.4)',
+        }}>
+          leftPane
+        </div>
+        <div style={{
+          width: 200,
+          backgroundColor: 'rgba(0,255,255,0.6)',
+        }}>
+          rightPane
+        </div>
       </div>
     )
   }
 }
 
-ReactDOM.render(<Root />, document.getElementById('react-root'))
+const EnhancedRoot = Enhancer(Root, 'test')
+
+ReactDOM.render(
+  <EnhancedRoot
+    width={window.innerWidth}
+    height={window.innerHeight}
+  />,
+  document.getElementById('react-root')
+)
