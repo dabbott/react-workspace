@@ -15,14 +15,14 @@ const style = {
   overflow: 'hidden',
 }
 
-const layout = {
+let layout = {
   style: {
     flex: 1,
     flexDirection: 'column',
     width: window.innerWidth,
     height: window.innerHeight,
   },
-  // resizable: true,
+  resizable: true,
   children: [
     {
       id: 'toolbar',
@@ -98,6 +98,10 @@ class Root extends Component {
         <Workspace
           components={components}
           layout={layout}
+          onLayoutChange={(updated) => {
+            layout = updated
+            this.forceUpdate()
+          }}
         />
       </div>
     )

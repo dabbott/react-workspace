@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
 import cssLayout from 'css-layout'
 import clone from 'lodash.clonedeep'
+import update from 'react-addons-update'
 
 import Pane from './Pane'
+import * as Utils from './Utils'
 
 const styles = {
   main: {
@@ -49,7 +51,32 @@ export default class extends React.Component {
     return edge
   }
 
-  renderItem(node, resizableEdge = 'none', lastChild = true) {
+  onResize(resizableEdge, elementPath, value) {
+    const node = Utils.getElementForPath(this.state.layout, elementPath)
+    const next = Utils.getNextElementForPath(this.state.layout, elementPath)
+
+    const key = resizableEdge === 'right' ? 'width' : 'height'
+    let edit = null
+
+    // Find the element with a fixed width or height and edit that element
+    const delta = value - node.layout[key]
+
+    if (node.style[key]) {
+      edit = {id: node.id, value: node.style[key] + delta}
+    } else {
+      edit = {id: next.id, value: next.style[key] - delta}
+    }
+
+    const updater = Utils.getUpdaterForId(this.props.layout, edit.id, {
+      style: {$merge: {[key]: edit.value}}
+    })
+
+    const updated = update(this.props.layout, updater)
+
+    this.props.onLayoutChange(updated)
+  }
+
+  renderItem(node, elementPath = '0', resizableEdge = 'none', lastChild = true) {
     const {id, layout, children, resizable} = node
     const {components} = this.props
     const component = components[id] || <div />
@@ -57,13 +84,10 @@ export default class extends React.Component {
 
     return (
       <Pane
-        // size={size}
+        size={resizableEdge === 'bottom' ? node.layout.height : node.layout.width}
         resizableEdge={lastChild ? 'none' : resizableEdge}
-        style={{
-          ...layout,
-          position: 'absolute',
-        }}
-        onResize={(value) => console.log('value', value)}
+        style={{...layout, position: 'absolute'}}
+        onResize={this.onResize.bind(this, resizableEdge, elementPath)}
       >
         {React.cloneElement(component, {
           style: {
@@ -77,6 +101,7 @@ export default class extends React.Component {
             children.map((childNode, i) => {
               return this.renderItem(
                 childNode,
+                `${elementPath}.${i}`,
                 resizable ? edge : 'none',
                 i === children.length - 1
               )
