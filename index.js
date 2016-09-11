@@ -25,7 +25,7 @@ const styles = {
   },
   leftPane: {
     flex: 0,
-    height: 200,
+    width: 200,
     backgroundColor: 'rgba(0,255,255,0.4)'
   },
   centerPane: {
@@ -34,7 +34,7 @@ const styles = {
   },
   rightPane: {
     flex: 0,
-    height: 250,
+    width: 250,
     backgroundColor: 'rgba(0,255,255,0.6)'
   },
 }
@@ -60,14 +60,17 @@ class Root extends Component {
   render() {
     return (
       <div style={styles.main} key={'yolo'} data-resizable>
-        <div style={styles.leftPane}>
-          leftPane
-        </div>
-        <div style={styles.centerPane}>
-          <Test />
-        </div>
-        <div style={styles.rightPane}>
-          rightPane
+        <div style={styles.toolbar} />
+        <div style={styles.content} data-resizable>
+          <div style={styles.leftPane}>
+            leftPane
+          </div>
+          <div style={styles.centerPane}>
+            <Test />
+          </div>
+          <div style={styles.rightPane}>
+            rightPane
+          </div>
         </div>
       </div>
     )
