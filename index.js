@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom'
 
 import Workspace from './src/Workspace'
 import Enhancer from './src/Enhancer'
+import Radium from './src/Radium'
 
 const styles = {
   main: {
@@ -24,7 +25,7 @@ const styles = {
   },
   leftPane: {
     flex: 0,
-    width: 200,
+    height: 200,
     backgroundColor: 'rgba(0,255,255,0.4)'
   },
   centerPane: {
@@ -33,7 +34,7 @@ const styles = {
   },
   rightPane: {
     flex: 0,
-    width: 250,
+    height: 250,
     backgroundColor: 'rgba(0,255,255,0.6)'
   },
 }
@@ -50,7 +51,7 @@ const styles = {
 class Root extends Component {
   render() {
     return (
-      <div style={styles.main}>
+      <div style={styles.main} key={'yolo'}>
         <div style={styles.leftPane}>
           leftPane
         </div>
@@ -65,9 +66,11 @@ class Root extends Component {
   }
 }
 
-const EnhancedRoot = Enhancer(Root, 'test')
+// const EnhancedRoot = Enhancer(Root, 'test')
+const EnhancedRoot = Radium(Root, 'test')
 
 ReactDOM.render(
   <EnhancedRoot />,
+  // <Root />,
   document.getElementById('react-root')
 )

@@ -58,6 +58,17 @@ export default class extends React.Component {
     return map
   }
 
+  extractLayoutMap(children, map = {}) {
+    React.Children.forEach(children, (child) => {
+      const {props} = child
+
+      map[props.id] = child
+      this.extractLayoutMap(props.children, map)
+    })
+
+    return map
+  }
+
   extractLayoutChildren(children = []) {
     return React.Children.map(children, (child) => {
       const {props} = child

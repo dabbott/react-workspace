@@ -20,7 +20,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { Component, PropTypes } from 'react'
+import React, { Component, PropTypes } from 'react'
+import cssLayout from 'css-layout'
+
+import Pane from './Pane'
+
+const styles = {
+  reset: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    flexShrink: 0,
+    alignContent: 'flex-start',
+
+    position: 'relative',
+    boxSizing: 'border-box',
+    border: '0 solid black',
+    margin: 0,
+    padding: 0,
+    minWidth: 0,
+  }
+}
 
 const KEYS_TO_IGNORE_WHEN_COPYING_PROPERTIES = [
   'arguments',
@@ -81,10 +102,143 @@ export default function enhanceWithRadium(component) {
       this._workspaceIsMounted = false
     }
 
+    // cloneWithDefaultStyle(children) {
+    //   return React.Children.map(children, (child) => {
+    //     if (
+    //       typeof child === 'string' ||
+    //       typeof child === 'number' ||
+    //       ! child
+    //     ) {
+    //       return child
+    //     }
+    //
+    //     const {props} = child
+    //     const nested = props && props.children
+    //
+    //     return React.cloneElement(child, {
+    //       style: {...styles.reset, ...(props && props.style)},
+    //       ...(nested && {children: this.cloneWithDefaultStyle(nested)})
+    //     })
+    //   })
+    // }
+
+    // cloneWithDefaultStyle(children) {
+    //   return React.Children.map(children, (child) => {
+        // if (
+        //   typeof child === 'string' ||
+        //   typeof child === 'number' ||
+        //   ! child
+        // ) {
+        //   return child
+        // }
+    //
+    //     const {props} = child
+    //     const nested = props && props.children
+    //
+    //     return React.cloneElement(child, {
+    //       style: {...styles.reset, ...(props && props.style)},
+    //       ...(nested && {children: this.cloneWithDefaultStyle(nested)})
+    //     })
+    //   })
+    // }
+
+    extractLayout(children = [], keyPath = '') {
+      return React.Children.toArray(children)
+        .map((child) => {
+          if (
+            typeof child === 'string' ||
+            typeof child === 'number' ||
+            ! child
+          ) {
+            return null
+          }
+
+          const {props, key} = child
+          const childKeyPath = `${keyPath}${key}`
+
+          return {
+            keyPath: childKeyPath,
+            style: props.style,
+            children: this.extractLayout(props.children, childKeyPath),
+          }
+        })
+        .filter(x => x)
+    }
+
+    extractLayoutMap(children, layoutMap = {}) {
+      if (!children) return
+
+      if (!Array.isArray(children)) {
+        children = [children]
+      }
+
+      children.forEach((child) => {
+        layoutMap[child.keyPath] = child.layout
+        this.extractLayoutMap(child.children, layoutMap)
+      })
+
+      return layoutMap
+    }
+
+    applyLayoutMap(children = [], layoutMap = {}, keyPath = '') {
+      return React.Children.toArray(children)
+        .map((child) => {
+          if (
+            typeof child === 'string' ||
+            typeof child === 'number' ||
+            ! child
+          ) {
+            return child
+          }
+
+          const {key, props} = child
+          const childKeyPath = `${keyPath}${key}`
+          const layout = layoutMap[childKeyPath]
+
+          const cloned = React.cloneElement(child, {
+            style: {
+              ...(props && props.style),
+              width: layout.width,
+              height: layout.height,
+              position: 'absolute',
+              overflow: 'hidden',
+            },
+            children: props.children && this.applyLayoutMap(props.children, layoutMap, childKeyPath),
+            width: layout.width,
+            height: layout.height,
+          })
+
+          return (
+            <Pane
+              key={key}
+              size={200}
+              resizableEdge={'none'}
+              style={{...layout, position: 'absolute'}}
+              onResize={() => {}}
+            >
+              {cloned}
+            </Pane>
+          )
+        })
+        .filter(x => x)
+    }
+
     render() {
       const renderedElement = super.render()
 
-      return renderedElement
+      console.log('rendered', React.Children.toArray(renderedElement))
+
+      const layout = this.extractLayout(renderedElement)[0]
+      cssLayout(layout)
+      const layoutMap = this.extractLayoutMap(layout)
+      console.log('layout', layout, layoutMap)
+
+      return (
+        <div style={styles.reset}>
+          {/* {renderedElement} */}
+          {this.applyLayoutMap(renderedElement, layoutMap)}
+        </div>
+      )
     }
   }
 
