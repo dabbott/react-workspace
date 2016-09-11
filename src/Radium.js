@@ -22,8 +22,10 @@
 
 import React, { Component, PropTypes } from 'react'
 import cssLayout from 'css-layout'
+import clone from 'lodash.clonedeep'
 
 import Pane from './Pane'
+import * as Utils from './Utils'
 
 const styles = {
   reset: {
@@ -102,46 +104,6 @@ export default function enhanceWithRadium(component) {
       this._workspaceIsMounted = false
     }
 
-    // cloneWithDefaultStyle(children) {
-    //   return React.Children.map(children, (child) => {
-    //     if (
-    //       typeof child === 'string' ||
-    //       typeof child === 'number' ||
-    //       ! child
-    //     ) {
-    //       return child
-    //     }
-    //
-    //     const {props} = child
-    //     const nested = props && props.children
-    //
-    //     return React.cloneElement(child, {
-    //       style: {...styles.reset, ...(props && props.style)},
-    //       ...(nested && {children: this.cloneWithDefaultStyle(nested)})
-    //     })
-    //   })
-    // }
-
-    // cloneWithDefaultStyle(children) {
-    //   return React.Children.map(children, (child) => {
-        // if (
-        //   typeof child === 'string' ||
-        //   typeof child === 'number' ||
-        //   ! child
-        // ) {
-        //   return child
-        // }
-    //
-    //     const {props} = child
-    //     const nested = props && props.children
-    //
-    //     return React.cloneElement(child, {
-    //       style: {...styles.reset, ...(props && props.style)},
-    //       ...(nested && {children: this.cloneWithDefaultStyle(nested)})
-    //     })
-    //   })
-    // }
-
     extractLayout(children = [], keyPath = '') {
       return React.Children.toArray(children)
         .map((child) => {
@@ -150,7 +112,7 @@ export default function enhanceWithRadium(component) {
             typeof child === 'number' ||
             ! child
           ) {
-            return null
+            return {style: {}, children: [], garbage: true}
           }
 
           const {props, key} = child
@@ -162,7 +124,6 @@ export default function enhanceWithRadium(component) {
             children: this.extractLayout(props.children, childKeyPath),
           }
         })
-        .filter(x => x)
     }
 
     extractLayoutMap(children, layoutMap = {}) {
@@ -173,16 +134,50 @@ export default function enhanceWithRadium(component) {
       }
 
       children.forEach((child) => {
-        layoutMap[child.keyPath] = child.layout
+        if (!child.keyPath) return
+
+        layoutMap[child.keyPath] = child
         this.extractLayoutMap(child.children, layoutMap)
       })
 
       return layoutMap
     }
 
-    applyLayoutMap(children = [], layoutMap = {}, keyPath = '') {
-      return React.Children.toArray(children)
-        .map((child) => {
+    getResizableEdge(flexDirection) {
+      const direction = flexDirection ? flexDirection : 'column'
+      return direction === 'column' ? 'bottom' : 'right'
+    }
+
+    onResize(resizableEdge, indexPath, layout, value) {
+      const node = Utils.getElementForPath(this.layout, indexPath)
+      const next = Utils.getNextElementForPath(this.layout, indexPath)
+
+      const key = resizableEdge === 'right' ? 'width' : 'height'
+      let edit = null
+
+      // Find the element with a fixed width or height and edit that element
+      const delta = value - layout[key]
+
+      if (node.style[key]) {
+        node.style[key] = node.style[key] + delta
+      } else {
+        next.style[key] = next.style[key] - delta
+      }
+
+      this.forceUpdate()
+    }
+
+    applyLayoutMap(
+      children = [],
+      layoutMap = {},
+      keyPath = '',
+      indexPath = '',
+      resizableEdge = 'none'
+    ) {
+      children = React.Children.toArray(children)
+
+      return children
+        .map((child, i) => {
           if (
             typeof child === 'string' ||
             typeof child === 'number' ||
@@ -191,30 +186,47 @@ export default function enhanceWithRadium(component) {
             return child
           }
 
-          const {key, props} = child
+          const {key, props = {}} = child
           const childKeyPath = `${keyPath}${key}`
-          const layout = layoutMap[childKeyPath]
+          const childIndexPath = `${indexPath}.${i}`
+          const layout = layoutMap[childKeyPath].layout
+          const lastChild = i === children.length - 1
 
           const cloned = React.cloneElement(child, {
             style: {
-              ...(props && props.style),
+              ...props.style,
               width: layout.width,
               height: layout.height,
               position: 'absolute',
               overflow: 'hidden',
             },
-            children: props.children && this.applyLayoutMap(props.children, layoutMap, childKeyPath),
+            children: props.children && this.applyLayoutMap(
+              props.children,
+              layoutMap,
+              childKeyPath,
+              childIndexPath,
+              props.resizable || props['data-resizable'] ?
+                this.getResizableEdge(props.style && props.style.flexDirection) :
+                'none'
+            ),
             width: layout.width,
             height: layout.height,
           })
 
+          // console.log('clone', props)
+
+          // console.log(lastChild, childKeyPath, i, children.length)
+
           return (
             <Pane
               key={key}
-              size={200}
-              resizableEdge={'none'}
+              size={resizableEdge === 'bottom' ? layout.height : layout.width}
+              resizableEdge={lastChild ? 'none' : resizableEdge}
               style={{...layout, position: 'absolute'}}
-              onResize={() => {}}
+              onResize={(value) => {
+                // console.log('resizing', childKeyPath, childIndexPath, child)
+                this.onResize(resizableEdge, childIndexPath, layout, value)
+              }}
             >
               {cloned}
             </Pane>
@@ -226,12 +238,14 @@ export default function enhanceWithRadium(component) {
     render() {
       const renderedElement = super.render()
 
-      console.log('rendered', React.Children.toArray(renderedElement))
+      // console.log('rendered', React.Children.toArray(renderedElement))
 
-      const layout = this.extractLayout(renderedElement)[0]
+      this.layout = this.layout || this.extractLayout(renderedElement)[0]
+
+      const layout = clone(this.layout)
       cssLayout(layout)
       const layoutMap = this.extractLayoutMap(layout)
-      console.log('layout', layout, layoutMap)
+      // console.log('layout', layout, layoutMap)
 
       return (
         <div style={styles.reset}>

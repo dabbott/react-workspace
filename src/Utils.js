@@ -1,5 +1,5 @@
 export const parseElementPath = (elementPath) => {
-  return elementPath.split('.').map((x) => parseInt(x))
+  return elementPath.slice(1).split('.').map((x) => parseInt(x))
 }
 
 export const getElementById = (node, id) => {

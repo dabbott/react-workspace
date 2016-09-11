@@ -48,15 +48,23 @@ const styles = {
 <div style={{backgroundColor: 'rgba(0,255,255,0.2)'}}></div>
 */
 
+class Test extends Component {
+  render() {
+    return (
+      <div style={{height: 10, flex: 1}}>YOLO</div>
+    )
+  }
+}
+
 class Root extends Component {
   render() {
     return (
-      <div style={styles.main} key={'yolo'}>
+      <div style={styles.main} key={'yolo'} data-resizable>
         <div style={styles.leftPane}>
           leftPane
         </div>
         <div style={styles.centerPane}>
-          centerPane
+          <Test />
         </div>
         <div style={styles.rightPane}>
           rightPane
