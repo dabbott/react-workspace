@@ -22,7 +22,7 @@ const layout = {
     width: window.innerWidth,
     height: window.innerHeight,
   },
-  resizable: true,
+  // resizable: true,
   children: [
     {
       id: 'toolbar',
@@ -37,6 +37,7 @@ const layout = {
         flex: 1,
         flexDirection: 'row',
       },
+      resizable: true,
       children: [
         {
           id: 'leftPane',

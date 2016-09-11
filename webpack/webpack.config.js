@@ -5,7 +5,8 @@ const DIRECTORY = path.dirname(__dirname)
 
 module.exports = {
   devServer: {
-    contentBase: DIRECTORY
+    contentBase: DIRECTORY,
+    port: 3001,
   },
   entry: {
     index: path.join(DIRECTORY, 'index.js'),

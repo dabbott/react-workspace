@@ -38,34 +38,30 @@ export default class extends React.Component {
     const layout = clone(props.layout)
     cssLayout(layout)
 
-    return {
-      layout,
-    }
+    return {layout}
   }
 
-  getResizeOptions(node, lastChild) {
-    const {style, layout} = node
+  getResizeOptions(parentNode) {
+    const {style, layout} = parentNode
     const direction = style.flexDirection ? style.flexDirection : 'column'
-    const size = direction === 'column' ? layout.height : layout.width
-    const edge = lastChild ? 'none' : direction === 'column' ? 'bottom' : 'right'
+    const edge = direction === 'column' ? 'bottom' : 'right'
 
-    return {direction, size, edge}
+    return edge
   }
 
-  renderItem(node, lastChild = true) {
+  renderItem(node, resizableEdge = 'none', lastChild = true) {
     const {id, layout, children, resizable} = node
     const {components} = this.props
     const component = components[id] || <div />
-    const {direction, size, edge} = this.getResizeOptions(node, lastChild)
+    const edge = this.getResizeOptions(node)
 
     return (
       <Pane
-        size={size}
-        resizableEdge={edge}
+        // size={size}
+        resizableEdge={lastChild ? 'none' : resizableEdge}
         style={{
           ...layout,
           position: 'absolute',
-          overflow: 'hidden',
         }}
         onResize={(value) => console.log('value', value)}
       >
@@ -79,7 +75,11 @@ export default class extends React.Component {
           },
           children: children.length > 0 ?
             children.map((childNode, i) => {
-              return this.renderItem(childNode, i === children.length - 1)
+              return this.renderItem(
+                childNode,
+                resizable ? edge : 'none',
+                i === children.length - 1
+              )
             }) :
             component.props.children,
           width: layout.width,
