@@ -5,6 +5,7 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
 import Workspace from './src/Workspace'
+import Enhancer from './src/Enhancer'
 
 const style = {
   flex: 1,
@@ -15,94 +16,138 @@ const style = {
   overflow: 'hidden',
 }
 
-let layout = {
-  style: {
-    flex: 1,
-    flexDirection: 'column',
-    width: window.innerWidth,
-    height: window.innerHeight,
-  },
-  resizable: true,
-  children: [
-    {
-      id: 'toolbar',
-      style: {
-        flex: 0,
-        height: 40,
-      },
-    },
-    {
-      id: 'workspace',
-      style: {
-        flex: 1,
-        flexDirection: 'row',
-      },
-      resizable: true,
-      children: [
-        {
-          id: 'leftPane',
-          style: {
-            flex: 0,
-            width: 200,
-          },
-        },
-        {
-          id: 'centerPane',
-          style: {
-            flex: 1,
-          },
-        },
-        {
-          id: 'rightPane',
-          style: {
-            flex: 0,
-            width: 250,
-          },
-        },
-      ]
-    },
-  ]
-}
+const LeftPane = Enhancer(class extends Component {
+  render() {
+    return (
+      <div
+        style={{backgroundColor: 'rgba(0,255,255,0.4)'}}
+      >
+        leftPane
+      </div>
+    )
+  }
+})
 
-const components = {
-  workspace: <div style={{backgroundColor: 'rgba(0,255,255,0.2)'}}>workspace</div>,
-  leftPane: <div style={{backgroundColor: 'rgba(0,255,255,0.4)'}}>leftPane</div>,
-  rightPane: <div style={{backgroundColor: 'rgba(0,255,255,0.6)'}}>rightPane</div>,
-  toolbar: <div style={{backgroundColor: 'rgba(255,0,255,0.3)'}}>toolbar</div>,
-  centerPane: <div style={{backgroundColor: 'rgba(255,0,255,0.6)'}}>centerPane</div>,
-}
+const RightPane = Enhancer(class extends Component {
+  render() {
+    return (
+      <div
+        style={{backgroundColor: 'rgba(0,255,255,0.6)'}}
+      >
+        rightPane
+      </div>
+    )
+  }
+})
+
+const Toolbar = Enhancer(class extends Component {
+  render() {
+    return (
+      <div
+        style={{backgroundColor: 'rgba(255,0,255,0.3)'}}
+      >
+        toolbar
+      </div>
+    )
+  }
+})
+
+const CenterPane = Enhancer(class extends Component {
+  render() {
+    return (
+      <div
+        style={{backgroundColor: 'rgba(255,0,255,0.6)'}}
+      >
+        centerPane
+      </div>
+    )
+  }
+})
+
+const Content = Enhancer(class extends Component {
+  render() {
+    return (
+      <div
+        style={{backgroundColor: 'rgba(0,255,255,0.2)'}}
+      >
+        {this.props.children}
+      </div>
+    )
+  }
+})
+
+const Main = Enhancer(class extends Component {
+  render() {
+    return (
+      <div
+        style={{backgroundColor: 'rgba(0,255,255,0.2)'}}
+      >
+        {this.props.children}
+      </div>
+    )
+  }
+})
 
 class Root extends Component {
-  constructor(props) {
-    super(props)
+  constructor() {
+    super()
 
-    this.setWindowDimensions()
-
-    window.addEventListener('resize', () => {
-      this.setWindowDimensions()
-      this.forceUpdate()
-    })
-  }
-
-  setWindowDimensions() {
-    layout.style = {
-      ...layout.style,
-      width: window.innerWidth,
-      height: window.innerHeight,
+    this.state = {
+      styles: {
+        main: {
+          flex: 1,
+          flexDirection: 'column',
+          width: window.innerWidth,
+          height: window.innerHeight,
+        },
+        toolbar: {
+          flex: 0,
+          height: 40,
+        },
+        content: {
+          flex: 1,
+          flexDirection: 'row',
+        },
+        leftPane: {
+          flex: 0,
+          width: 200,
+        },
+        centerPane: {
+          flex: 1,
+        },
+        rightPane: {
+          flex: 0,
+          width: 250,
+        },
+      }
     }
   }
 
   render() {
+    const {styles} = this.state
+
     return (
       <div style={style}>
         <Workspace
-          components={components}
-          layout={layout}
-          onLayoutChange={(updated) => {
-            layout = updated
-            this.forceUpdate()
-          }}
-        />
+          id={'workspace1'}
+        >
+          <Main
+            resizable={true}
+            id={'main'}
+            style={styles.main}
+          >
+            <Toolbar
+              id={'toolbar'}
+              style={styles.toolbar}
+            />
+            <Content
+              id={'content'}
+              style={styles.content}
+            >
+
+            </Content>
+          </Main>
+        </Workspace>
       </div>
     )
   }

@@ -37,10 +37,47 @@ export default class extends React.Component {
   }
 
   mapPropsToState(props) {
-    const layout = clone(props.layout)
+    const layout = this.extractLayout(props)
     cssLayout(layout)
 
+    console.log(React.Children.toArray(props.children))
+    console.log('children', props.children)
+    console.log('element map', this.extractElementMap(props.children))
+
     return {layout}
+  }
+
+  extractElementMap(children, map = {}) {
+    React.Children.forEach(children, (child) => {
+      const {props} = child
+
+      map[props.id] = child
+      this.extractElementMap(props.children, map)
+    })
+
+    return map
+  }
+
+  extractLayoutChildren(children = []) {
+    return React.Children.map(children, (child) => {
+      const {props} = child
+
+      return {
+        id: props.id,
+        style: props.style,
+        children: this.extractLayoutChildren(props.children),
+      }
+    })
+  }
+
+  extractLayout(props) {
+    const {id, children, style} = props
+
+    return {
+      id,
+      style,
+      children: this.extractLayoutChildren(children)
+    }
   }
 
   getResizeOptions(parentNode) {
@@ -116,10 +153,11 @@ export default class extends React.Component {
 
   render() {
     const {layout} = this.state
+    const {children, style} = this.props
 
     return (
       <div style={styles.main}>
-        {this.renderItem(layout)}
+        {/* {this.renderItem(layout)} */}
       </div>
     )
   }
