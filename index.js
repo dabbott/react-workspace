@@ -7,15 +7,6 @@ import ReactDOM from 'react-dom'
 import Workspace from './src/Workspace'
 import Enhancer from './src/Enhancer'
 
-const style = {
-  flex: 1,
-  display: 'flex',
-  alignItems: 'stretch',
-  minWidth: 0,
-  minHeight: 0,
-  overflow: 'hidden',
-}
-
 const styles = {
   main: {
     flex: 1,
@@ -34,13 +25,16 @@ const styles = {
   leftPane: {
     flex: 0,
     width: 200,
+    backgroundColor: 'rgba(0,255,255,0.4)'
   },
   centerPane: {
     flex: 1,
+    backgroundColor: 'rgba(255,0,255,0.6)'
   },
   rightPane: {
     flex: 0,
     width: 250,
+    backgroundColor: 'rgba(0,255,255,0.6)'
   },
 }
 
@@ -54,23 +48,16 @@ const styles = {
 */
 
 class Root extends Component {
-  constructor() {
-    super()
-  }
-
   render() {
     return (
-      <div style={style}>
-        <div style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,255,255,0.4)',
-        }}>
+      <div style={styles.main}>
+        <div style={styles.leftPane}>
           leftPane
         </div>
-        <div style={{
-          width: 200,
-          backgroundColor: 'rgba(0,255,255,0.6)',
-        }}>
+        <div style={styles.centerPane}>
+          centerPane
+        </div>
+        <div style={styles.rightPane}>
           rightPane
         </div>
       </div>
@@ -81,9 +68,6 @@ class Root extends Component {
 const EnhancedRoot = Enhancer(Root, 'test')
 
 ReactDOM.render(
-  <EnhancedRoot
-    width={window.innerWidth}
-    height={window.innerHeight}
-  />,
+  <EnhancedRoot />,
   document.getElementById('react-root')
 )

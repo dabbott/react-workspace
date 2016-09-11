@@ -24,75 +24,79 @@ const styles = {
   }
 }
 
-export default (WrappedComponent, workspaceId) => class extends Component {
+export default (WrappedComponent, workspaceId) => {
 
-  static isWorkspaceComponent = true
+  return class extends Component {
 
-  constructor(props) {
-    super()
+    static isWorkspaceComponent = true
 
-    this.state = this.mapPropsToState(props)
+    constructor(props) {
+      super()
+
+      this.state = this.mapPropsToState(props)
+    }
+
+    componentWillReceiveProps(nextProps) {
+      this.setState(this.mapPropsToState(nextProps))
+    }
+
+    mapPropsToState(props) {
+      const layout = this.extractLayout(props.children)
+      cssLayout(layout)
+
+      console.log('layout', layout, props)
+      // console.log(React.Children.toArray(props.children))
+      // console.log('children', props.children)
+      // console.log('element map', this.extractElementMap(props.children))
+
+      return {layout}
+    }
+
+    extractElementMap(children, map = {}) {
+      React.Children.forEach(children, (child) => {
+        const {props} = child
+
+        map[props.key] = child
+        this.extractElementMap(props.children, map)
+      })
+
+      return map
+    }
+
+    extractLayoutMap(children, map = {}) {
+      React.Children.forEach(children, (child) => {
+        const {props} = child
+
+        map[props.key] = child
+        this.extractLayoutMap(props.children, map)
+      })
+
+      return map
+    }
+
+    extractLayout(children = []) {
+      return React.Children.map(children, (child) => {
+        const {props} = child
+
+        return {
+          key: props.key,
+          style: props.style,
+          children: this.extractLayout(props.children),
+        }
+      })
+    }
+
+    render() {
+      const {children} = this.props
+
+      return (
+        <div style={styles.reset}>
+          <WrappedComponent>
+            {children}
+          </WrappedComponent>
+        </div>
+      )
+    }
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.setState(this.mapPropsToState(nextProps))
-  }
-
-  mapPropsToState(props) {
-    const layout = this.extractLayout(props.children)
-    cssLayout(layout)
-
-    console.log('layout', layout, props)
-    // console.log(React.Children.toArray(props.children))
-    // console.log('children', props.children)
-    // console.log('element map', this.extractElementMap(props.children))
-
-    return {layout}
-  }
-
-  extractElementMap(children, map = {}) {
-    React.Children.forEach(children, (child) => {
-      const {props} = child
-
-      map[props.key] = child
-      this.extractElementMap(props.children, map)
-    })
-
-    return map
-  }
-
-  extractLayoutMap(children, map = {}) {
-    React.Children.forEach(children, (child) => {
-      const {props} = child
-
-      map[props.key] = child
-      this.extractLayoutMap(props.children, map)
-    })
-
-    return map
-  }
-
-  extractLayout(children = []) {
-    return React.Children.map(children, (child) => {
-      const {props} = child
-
-      return {
-        key: props.key,
-        style: props.style,
-        children: this.extractLayout(props.children),
-      }
-    })
-  }
-
-  render() {
-    const {children} = this.props
-
-    return (
-      <div style={styles.reset}>
-        <WrappedComponent>
-          {children}
-        </WrappedComponent>
-      </div>
-    )
-  }
 }
