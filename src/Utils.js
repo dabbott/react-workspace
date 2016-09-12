@@ -1,24 +1,4 @@
-export const parseElementPath = (elementPath) => {
-  return elementPath.slice(1).split('.').map((x) => parseInt(x))
-}
-
-export const getElementById = (node, id) => {
-  if (node.id === id) {
-    return node
-  }
-
-  if (node.children) {
-    for (let i = 0; i < node.children.length; i++) {
-      const result = getElementById(node.children[i], id)
-
-      if (result) {
-        return result
-      }
-    }
-  }
-
-  return null
-}
+import React, { Component, PropTypes } from 'react'
 
 export const getElementByKeyPath = (node, keyPath) => {
   if (node.keyPath === keyPath) {
@@ -56,54 +36,82 @@ export const getNextElementByKeyPath = (node, keyPath, nextNode = null) => {
   return null
 }
 
-export const getUpdaterForId = (node, id, command, updater = {}) => {
-  if (node.id === id) {
-    return command
-  }
-
-  if (node.children) {
-    updater.children = {}
-
-    for (let i = 0; i < node.children.length; i++) {
-      const result = getUpdaterForId(node.children[i], id, command)
-
-      if (result) {
-        updater.children[i] = result
-        return updater
+export const extractLayout = (children = [], keyPath = '') => {
+  return React.Children.toArray(children)
+    .map((child) => {
+      if (
+        typeof child === 'string' ||
+        typeof child === 'number' ||
+        ! child
+      ) {
+        return {style: {}, children: [], garbage: true}
       }
+
+      const {props, key} = child
+      const childKeyPath = `${keyPath}${key}`
+
+      return {
+        keyPath: childKeyPath,
+        style: props.style,
+        children: extractLayout(props.children, childKeyPath),
+      }
+    })
+}
+
+export const extractLayoutMap = (children, layoutMap = {}) => {
+  if (!children) return
+
+  if (!Array.isArray(children)) {
+    children = [children]
+  }
+
+  children.forEach((child) => {
+    if (!child.keyPath) return
+
+    layoutMap[child.keyPath] = child
+    extractLayoutMap(child.children, layoutMap)
+  })
+
+  return layoutMap
+}
+
+export const overrideLayout = (layout, overrides) => {
+  Object.keys(overrides).forEach((keyPath) => {
+    const node = getElementByKeyPath(layout, keyPath)
+
+    if (node) {
+      // console.log('overriding', keyPath)
+      node.style = {...node.style, ...overrides[keyPath]}
     }
-  }
-
-  return null
+  })
 }
 
-export const getElementForPath = (layout, elementPath) => {
-  const parsed = parseElementPath(elementPath)
-
-  // Remove the first element, since layout has a single node at top
-  parsed.shift()
-
-  let node = layout
-  while (parsed.length) {
-    node = node.children[parsed[0]]
-    parsed.shift()
-  }
-
-  return node
+export const getResizableEdge = (flexDirection) => {
+  const direction = flexDirection ? flexDirection : 'column'
+  return direction === 'column' ? 'bottom' : 'right'
 }
 
-export const getNextElementForPath = (layout, elementPath) => {
-  const parsed = parseElementPath(elementPath)
+export function calculateElementUpdate(layout, keyPath, resizableEdge, value) {
 
-  // Remove the first element, since layout has a single node at top
-  parsed.shift()
+  const node = getElementByKeyPath(layout, keyPath)
+  const next = getNextElementByKeyPath(layout, keyPath)
 
-  let node = layout
-  while (parsed.length) {
-    const last = parsed.length === 1
-    node = node.children[last ? parsed[0] + 1 : parsed[0]]
-    parsed.shift()
+  const dimension = resizableEdge === 'right' ? 'width' : 'height'
+  const delta = value - node.layout[dimension]
+
+  // Find the element with a fixed width or height and edit that element
+  if (node.style[dimension]) {
+    return {
+      keyPath: node.keyPath,
+      style: {[dimension]: node.style[dimension] + delta},
+    }
+  } else if (next.style[dimension]) {
+    return {
+      keyPath: next.keyPath,
+      style: {[dimension]: next.style[dimension] - delta},
+    }
+  } else {
+    throw new Error(`React Workspace: One of the elements being resized
+      must have fixed dimensions.`)
   }
-
-  return node
 }

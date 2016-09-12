@@ -104,75 +104,20 @@ export default function enhanceWithRadium(component) {
       this._workspaceIsMounted = false
     }
 
-    extractLayout(children = [], keyPath = '') {
-      return React.Children.toArray(children)
-        .map((child) => {
-          if (
-            typeof child === 'string' ||
-            typeof child === 'number' ||
-            ! child
-          ) {
-            return {style: {}, children: [], garbage: true}
-          }
-
-          const {props, key} = child
-          const childKeyPath = `${keyPath}${key}`
-
-          return {
-            keyPath: childKeyPath,
-            style: props.style,
-            children: this.extractLayout(props.children, childKeyPath),
-          }
-        })
-    }
-
-    extractLayoutMap(children, layoutMap = {}) {
-      if (!children) return
-
-      if (!Array.isArray(children)) {
-        children = [children]
-      }
-
-      children.forEach((child) => {
-        if (!child.keyPath) return
-
-        layoutMap[child.keyPath] = child
-        this.extractLayoutMap(child.children, layoutMap)
-      })
-
-      return layoutMap
-    }
-
     getResizableEdge(flexDirection) {
       const direction = flexDirection ? flexDirection : 'column'
       return direction === 'column' ? 'bottom' : 'right'
     }
 
-    onResizeLayout(resizableEdge, keyPath, layout, value) {
+    onResizeLayout(keyPath, resizableEdge, value) {
 
       // TODO When does this occur?
-      if (!keyPath) {
-        return
-      }
+      if (!keyPath) return
 
-      const node = Utils.getElementByKeyPath(this.enhancedLayout, keyPath)
-      const next = Utils.getNextElementByKeyPath(this.enhancedLayout, keyPath)
+      const update = Utils.calculateElementUpdate(this.enhancedLayout, keyPath, resizableEdge, value)
+      const {keyPath: updatePath, style} = update
 
-      const key = resizableEdge === 'right' ? 'width' : 'height'
-      let edit = null
-
-      // Find the element with a fixed width or height and edit that element
-      const delta = value - layout[key]
-
-      if (node.style[key]) {
-        this.overrides[node.keyPath] = {[key]: node.style[key] + delta}
-        // node.style[key] = node.style[key] + delta
-      } else {
-        this.overrides[next.keyPath] = {[key]: next.style[key] - delta}
-        // next.style[key] = next.style[key] - delta
-      }
-
-      // console.log('overrides', this.overrides)
+      this.overrides[updatePath] = {...this.overrides[updatePath], ...style}
 
       this.forceUpdate()
     }
@@ -265,7 +210,7 @@ export default function enhanceWithRadium(component) {
               onResize={(value) => {
                 // console.log(value)
                 // console.log('resizing', childKeyPath, childIndexPath, child)
-                this.onResizeLayout(resizableEdge, childKeyPath, layout, value)
+                this.onResizeLayout(childKeyPath, resizableEdge, value)
               }}
             >
               {cloned}
@@ -275,29 +220,20 @@ export default function enhanceWithRadium(component) {
         .filter(x => x)
     }
 
-    overrideLayout(layout, overrides) {
-      Object.keys(overrides).forEach((keyPath) => {
-        const node = Utils.getElementByKeyPath(layout, keyPath)
 
-        if (node) {
-          // console.log('overriding', keyPath)
-          node.style = {...node.style, ...overrides[keyPath]}
-        }
-      })
-    }
 
     render() {
       const renderedElement = super.render()
 
       // console.log('rendered', React.Children.toArray(renderedElement))
 
-      const rawLayout = this.extractLayout(renderedElement)[0]
+      const rawLayout = Utils.extractLayout(renderedElement)[0]
       this.overrides = this.overrides || {}
 
       const layout = this.enhancedLayout = clone(rawLayout)
-      this.overrideLayout(layout, this.overrides)
+      Utils.overrideLayout(layout, this.overrides)
       cssLayout(layout)
-      const layoutMap = this.extractLayoutMap(layout)
+      const layoutMap = Utils.extractLayoutMap(layout)
       // console.log('layout', layout, layoutMap)
 
       return (
