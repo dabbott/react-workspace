@@ -4,7 +4,7 @@ require('./styles/index.css')
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
-import Enhancer from './src/Enhancer'
+import Enhancer from './src/WorkspaceEnhancer'
 
 const styles = {
   main: {

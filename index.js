@@ -1,1 +1,1 @@
-module.exports = require('./lib/Enhancer')
+module.exports = require('./lib/WorkspaceEnhancer')

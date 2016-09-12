@@ -1,43 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import clone from 'lodash.clonedeep'
 
-import Pane from './Pane'
-
-export const getElementByKeyPath = (node, keyPath) => {
-  if (node.keyPath === keyPath) {
-    return node
-  }
-
-  if (node.children) {
-    for (let i = 0; i < node.children.length; i++) {
-      const result = getElementByKeyPath(node.children[i], keyPath)
-
-      if (result) {
-        return result
-      }
-    }
-  }
-
-  return null
-}
-
-export const getNextElementByKeyPath = (node, keyPath, nextNode = null) => {
-  if (node.keyPath === keyPath) {
-    return nextNode
-  }
-
-  if (node.children) {
-    for (let i = 0; i < node.children.length; i++) {
-      const result = getNextElementByKeyPath(node.children[i], keyPath, node.children[i + 1])
-
-      if (result) {
-        return result
-      }
-    }
-  }
-
-  return null
-}
+import * as KeyPath from './KeyPath'
+import Pane from '../components/Pane'
 
 export const extractLayoutTree = (children = [], keyPath = '') => {
   return React.Children.toArray(children)
@@ -80,7 +45,7 @@ export const buildLayoutMap = (children, layoutMap = {}) => {
 
 export const overrideLayout = (layoutTree, overrides) => {
   Object.keys(overrides).forEach((keyPath) => {
-    const node = getElementByKeyPath(layoutTree, keyPath)
+    const node = KeyPath.getElementByKeyPath(layoutTree, keyPath)
 
     if (node) {
       // console.log('overriding', keyPath)
@@ -90,8 +55,8 @@ export const overrideLayout = (layoutTree, overrides) => {
 }
 
 export const calculateElementUpdate = (layoutTree, keyPath, resizableEdge, value) => {
-  const node = getElementByKeyPath(layoutTree, keyPath)
-  const next = getNextElementByKeyPath(layoutTree, keyPath)
+  const node = KeyPath.getElementByKeyPath(layoutTree, keyPath)
+  const next = KeyPath.getNextElementByKeyPath(layoutTree, keyPath)
 
   const dimension = resizableEdge === 'right' ? 'width' : 'height'
   const delta = value - node.layout[dimension]
@@ -173,16 +138,20 @@ export const applyLayoutMap = (
       let min = style[minDimension] || 0
       let max = style[maxDimension] || Infinity
 
-      if (!style[dimension] && !lastChild) {
+      if (!style[dimension] && !lastChild && resizableEdge !== 'none') {
         const nextChild = children[i + 1]
-        const total = layout[dimension] + nextChild.props.style[dimension]
+        const {layout: nextLayout} = KeyPath.getNextElementByKeyPath(layoutTree, childKeyPath)
 
-        if (nextChild.props.style[maxDimension]) {
-          min = Math.max(total - nextChild.props.style[maxDimension], 0)
-        }
+        if (nextChild) {
+          const total = layout[dimension] + nextLayout[dimension]
 
-        if (nextChild.props.style[minDimension]) {
-          max = Math.max(total - nextChild.props.style[minDimension], 0)
+          if (nextChild.props.style[maxDimension]) {
+            min = Math.max(total - nextChild.props.style[maxDimension], 0)
+          }
+
+          if (nextChild.props.style[minDimension]) {
+            max = Math.max(total - nextChild.props.style[minDimension], 0)
+          }
         }
       }
 
@@ -205,8 +174,6 @@ export const applyLayoutMap = (
               resizableEdge,
               value
             )
-
-            console.log('update', update)
 
             updateFunc(update)
           }}

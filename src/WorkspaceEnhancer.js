@@ -23,7 +23,7 @@
 import React, { Component, PropTypes } from 'react'
 import cssLayout from 'css-layout'
 
-import * as Utils from './Utils'
+import Utils from './utils'
 
 const styles = {
   reset: {
@@ -69,7 +69,7 @@ function isStateless(component) {
   return !component.render && !(component.prototype && component.prototype.render)
 }
 
-export default function enhanceWithRadium(component) {
+export default function enhanceComponent(component) {
 
   let ComposedComponent = component
 
