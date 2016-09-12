@@ -22,9 +22,7 @@
 
 import React, { Component, PropTypes } from 'react'
 import cssLayout from 'css-layout'
-import clone from 'lodash.clonedeep'
 
-import Pane from './Pane'
 import * as Utils from './Utils'
 
 const styles = {
@@ -93,6 +91,7 @@ export default function enhanceWithRadium(component) {
       super(...arguments)
 
       this.state = this.state || {}
+      this._overrides = {}
       this._workspaceIsMounted = true
     }
 
@@ -104,142 +103,30 @@ export default function enhanceWithRadium(component) {
       this._workspaceIsMounted = false
     }
 
-    getResizableEdge(flexDirection) {
-      const direction = flexDirection ? flexDirection : 'column'
-      return direction === 'column' ? 'bottom' : 'right'
-    }
-
-    onResizeLayout(keyPath, resizableEdge, value) {
-
-      // TODO When does this occur?
-      if (!keyPath) return
-
-      const update = Utils.calculateElementUpdate(this.enhancedLayout, keyPath, resizableEdge, value)
-      const {keyPath: updatePath, style} = update
-
-      this.overrides[updatePath] = {...this.overrides[updatePath], ...style}
-
-      this.forceUpdate()
-    }
-
-    applyLayoutMap(
-      children = [],
-      layoutMap = {},
-      keyPath = '',
-      indexPath = '',
-      resizableEdge = 'none'
-    ) {
-      children = React.Children.toArray(children)
-
-      return children
-        .map((child, i) => {
-          if (
-            typeof child === 'string' ||
-            typeof child === 'number' ||
-            ! child
-          ) {
-            return child
-          }
-
-          const {key, props = {}} = child
-          const {style = {}} = props
-          const childKeyPath = `${keyPath}${key}`
-          const childIndexPath = `${indexPath}.${i}`
-          const layout = layoutMap[childKeyPath].layout
-          const lastChild = i === children.length - 1
-
-          const cloned = React.cloneElement(child, {
-            style: {
-              ...style,
-              width: layout.width,
-              height: layout.height,
-              position: 'absolute',
-              overflow: 'hidden',
-            },
-            children: props.children && this.applyLayoutMap(
-              props.children,
-              layoutMap,
-              childKeyPath,
-              childIndexPath,
-              props.resizable || props['data-resizable'] ?
-                this.getResizableEdge(style.flexDirection) :
-                'none'
-            ),
-            width: layout.width,
-            height: layout.height,
-          })
-
-          // console.log('clone', props)
-
-          // console.log(lastChild, childKeyPath, i, children.length)
-
-          const dimension = resizableEdge === 'bottom' ? 'height' : 'width'
-          const minDimension = resizableEdge === 'bottom' ? 'minHeight' : 'minWidth'
-          const maxDimension = resizableEdge === 'bottom' ? 'maxHeight' : 'maxWidth'
-
-          let min = style[minDimension] || 0
-          let max = style[maxDimension] || Infinity
-
-          // console.log(style, layout)
-
-          // console.log(keyPath, min, style[dimension], max)
-
-          if (!style[dimension] && !lastChild) {
-            const nextChild = children[i + 1]
-            const total = layout[dimension] + nextChild.props.style[dimension]
-
-            if (nextChild.props.style[maxDimension]) {
-              min = Math.max(total - nextChild.props.style[maxDimension], 0)
-            }
-
-            if (nextChild.props.style[minDimension]) {
-              max = Math.max(total - nextChild.props.style[minDimension], 0)
-            }
-
-            // console.log(min, layout[dimension], max)
-          }
-
-          return (
-            <Pane
-              key={key}
-              min={min}
-              max={max}
-              size={layout[dimension]}
-              resizableEdge={lastChild ? 'none' : resizableEdge}
-              style={{...layout, position: 'absolute'}}
-              onResize={(value) => {
-                // console.log(value)
-                // console.log('resizing', childKeyPath, childIndexPath, child)
-                this.onResizeLayout(childKeyPath, resizableEdge, value)
-              }}
-            >
-              {cloned}
-            </Pane>
-          )
-        })
-        .filter(x => x)
-    }
-
-
-
     render() {
       const renderedElement = super.render()
+      const layoutTree = Utils.extractLayoutTree(renderedElement)[0]
 
-      // console.log('rendered', React.Children.toArray(renderedElement))
+      // Apply user-specified dimensions to styles
+      Utils.overrideLayout(layoutTree, this._overrides)
 
-      const rawLayout = Utils.extractLayout(renderedElement)[0]
-      this.overrides = this.overrides || {}
-
-      const layout = this.enhancedLayout = clone(rawLayout)
-      Utils.overrideLayout(layout, this.overrides)
-      cssLayout(layout)
-      const layoutMap = Utils.extractLayoutMap(layout)
-      // console.log('layout', layout, layoutMap)
+      // Compute the entire layout
+      cssLayout(layoutTree)
 
       return (
         <div style={styles.reset}>
-          {/* {renderedElement} */}
-          {this.applyLayoutMap(renderedElement, layoutMap)}
+          {Utils.renderWithLayoutTree(
+            renderedElement,
+            layoutTree,
+            ({keyPath, style}) => {
+              this._overrides[keyPath] = {
+                ...this._overrides[keyPath],
+                ...style
+              }
+
+              this.forceUpdate()
+            }
+          )}
         </div>
       )
     }
