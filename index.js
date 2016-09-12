@@ -1,1 +1,1 @@
-module.exports = require('./lib/Radium')
+module.exports = require('./lib/Enhancer')

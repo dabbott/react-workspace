@@ -4,7 +4,7 @@ require('./styles/index.css')
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
-import Radium from './src/Radium'
+import Enhancer from './src/Enhancer'
 
 const styles = {
   main: {
@@ -72,7 +72,7 @@ class Root extends Component {
   }
 }
 
-const EnhancedRoot = Radium(Root, 'test')
+const EnhancedRoot = Enhancer(Root, 'test')
 
 ReactDOM.render(
   <EnhancedRoot />,
