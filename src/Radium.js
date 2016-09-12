@@ -148,9 +148,15 @@ export default function enhanceWithRadium(component) {
       return direction === 'column' ? 'bottom' : 'right'
     }
 
-    onResize(resizableEdge, indexPath, layout, value) {
-      const node = Utils.getElementForPath(this.layout, indexPath)
-      const next = Utils.getNextElementForPath(this.layout, indexPath)
+    onResizeLayout(resizableEdge, keyPath, layout, value) {
+
+      // TODO When does this occur?
+      if (!keyPath) {
+        return
+      }
+
+      const node = Utils.getElementByKeyPath(this.enhancedLayout, keyPath)
+      const next = Utils.getNextElementByKeyPath(this.enhancedLayout, keyPath)
 
       const key = resizableEdge === 'right' ? 'width' : 'height'
       let edit = null
@@ -159,10 +165,14 @@ export default function enhanceWithRadium(component) {
       const delta = value - layout[key]
 
       if (node.style[key]) {
-        node.style[key] = node.style[key] + delta
+        this.overrides[node.keyPath] = {[key]: node.style[key] + delta}
+        // node.style[key] = node.style[key] + delta
       } else {
-        next.style[key] = next.style[key] - delta
+        this.overrides[next.keyPath] = {[key]: next.style[key] - delta}
+        // next.style[key] = next.style[key] - delta
       }
+
+      // console.log('overrides', this.overrides)
 
       this.forceUpdate()
     }
@@ -241,7 +251,7 @@ export default function enhanceWithRadium(component) {
               max = Math.max(total - nextChild.props.style[minDimension], 0)
             }
 
-            console.log(min, layout[dimension], max)
+            // console.log(min, layout[dimension], max)
           }
 
           return (
@@ -251,11 +261,11 @@ export default function enhanceWithRadium(component) {
               max={max}
               size={layout[dimension]}
               resizableEdge={lastChild ? 'none' : resizableEdge}
-              style={{...layout, position: 'absolute'}}
+              style={{...layout, position: 'absolute', ...style}}
               onResize={(value) => {
-                console.log(value)
+                // console.log(value)
                 // console.log('resizing', childKeyPath, childIndexPath, child)
-                this.onResize(resizableEdge, childIndexPath, layout, value)
+                this.onResizeLayout(resizableEdge, childKeyPath, layout, value)
               }}
             >
               {cloned}
@@ -265,14 +275,27 @@ export default function enhanceWithRadium(component) {
         .filter(x => x)
     }
 
+    overrideLayout(layout, overrides) {
+      Object.keys(overrides).forEach((keyPath) => {
+        const node = Utils.getElementByKeyPath(layout, keyPath)
+
+        if (node) {
+          // console.log('overriding', keyPath)
+          node.style = {...node.style, ...overrides[keyPath]}
+        }
+      })
+    }
+
     render() {
       const renderedElement = super.render()
 
       // console.log('rendered', React.Children.toArray(renderedElement))
 
-      this.layout = this.layout || this.extractLayout(renderedElement)[0]
+      const rawLayout = this.extractLayout(renderedElement)[0]
+      this.overrides = this.overrides || {}
 
-      const layout = clone(this.layout)
+      const layout = this.enhancedLayout = clone(rawLayout)
+      this.overrideLayout(layout, this.overrides)
       cssLayout(layout)
       const layoutMap = this.extractLayoutMap(layout)
       // console.log('layout', layout, layoutMap)

@@ -1,1 +1,1 @@
-export default from './src/Radium'
+module.exports = require('./lib/Radium')

@@ -1,5 +1,5 @@
 {
-  "name": "node-file-tree",
+  "name": "react-workspace",
   "version": "1.0.0",
   "description": "Build an immutable tree from a watched directory.",
   "main": "index.js",
