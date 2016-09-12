@@ -261,7 +261,7 @@ export default function enhanceWithRadium(component) {
               max={max}
               size={layout[dimension]}
               resizableEdge={lastChild ? 'none' : resizableEdge}
-              style={{...layout, position: 'absolute', ...style}}
+              style={{...layout, position: 'absolute'}}
               onResize={(value) => {
                 // console.log(value)
                 // console.log('resizing', childKeyPath, childIndexPath, child)

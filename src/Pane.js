@@ -27,7 +27,7 @@ export default class extends Component {
 
   getHandleStyle(axis, draggableSize, resizableEdge) {
     const style = {
-      zIndex: 1000,
+      zIndex: 10000,
       position: 'absolute',
       width: axis === AXIS.X ? draggableSize : '100%',
       height: axis === AXIS.Y ? draggableSize : '100%',
@@ -37,13 +37,13 @@ export default class extends Component {
 
     switch (resizableEdge) {
       case RESIZABLE_EDGE.LEFT:
-        return {...style, left: 0, top: 0}
+        return {...style, left: -draggableSize / 2, top: 0}
       case RESIZABLE_EDGE.RIGHT:
-        return {...style, right: 0, top: 0}
+        return {...style, right: -draggableSize / 2, top: 0}
       case RESIZABLE_EDGE.TOP:
-        return {...style, left: 0, top: 0}
+        return {...style, left: 0, top: -draggableSize / 2}
       case RESIZABLE_EDGE.BOTTOM:
-        return {...style, left: 0, bottom: 0}
+        return {...style, left: 0, bottom: -draggableSize / 2}
     }
   }
 
