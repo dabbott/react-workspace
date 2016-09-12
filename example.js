@@ -4,8 +4,6 @@ require('./styles/index.css')
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
-import Workspace from './src/Workspace'
-import Enhancer from './src/Enhancer'
 import Radium from './src/Radium'
 
 const styles = {
@@ -42,15 +40,6 @@ const styles = {
     backgroundColor: 'rgba(0,255,255,0.6)'
   },
 }
-
-/*
-<div style={{backgroundColor: 'rgba(0,255,255,0.4)'}}>leftPane</div>
-<div style={{backgroundColor: 'rgba(0,255,255,0.6)'}}>rightPane</div>
-
-<div style={{backgroundColor: 'rgba(255,0,255,0.6)'}}>centerPane</div>
-<div style={{backgroundColor: 'rgba(0,255,255,0.2)'}}></div>
-<div style={{backgroundColor: 'rgba(0,255,255,0.2)'}}></div>
-*/
 
 class Test extends Component {
   render() {
