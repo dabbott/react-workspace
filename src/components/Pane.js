@@ -18,6 +18,7 @@ export default class extends Component {
   static defaultProps = {
     size: 200,
     draggableSize: 3,
+    draggableColor: 'transparent',
     min: 100,
     max: 400,
     resizableEdge: RESIZABLE_EDGE.NONE,
@@ -25,34 +26,34 @@ export default class extends Component {
     onResize: () => {},
   }
 
-  getHandleStyle(axis, draggableSize, resizableEdge) {
+  getHandleStyle(axis, draggableSize, draggableColor, resizableEdge) {
     const style = {
-      zIndex: 1000,
+      zIndex: 10000,
       position: 'absolute',
       width: axis === AXIS.X ? draggableSize : '100%',
       height: axis === AXIS.Y ? draggableSize : '100%',
       cursor: axis === AXIS.X ? 'col-resize' : 'row-resize',
-      backgroundColor: 'red',
+      backgroundColor: draggableColor,
     }
 
     switch (resizableEdge) {
       case RESIZABLE_EDGE.LEFT:
-        return {...style, left: 0, top: 0}
+        return {...style, left: -draggableSize / 2, top: 0}
       case RESIZABLE_EDGE.RIGHT:
-        return {...style, right: 0, top: 0}
+        return {...style, right: -draggableSize / 2, top: 0}
       case RESIZABLE_EDGE.TOP:
-        return {...style, left: 0, top: 0}
+        return {...style, left: 0, top: -draggableSize / 2}
       case RESIZABLE_EDGE.BOTTOM:
-        return {...style, left: 0, bottom: 0}
+        return {...style, left: 0, bottom: -draggableSize / 2}
     }
   }
 
   render() {
-    const {style, resizableEdge, draggableSize, children, min, max, size, onResize} = this.props
+    const {style, resizableEdge, draggableSize, children, min, max, size, onResize, draggableColor} = this.props
     const axis = resizableEdge === RESIZABLE_EDGE.TOP || resizableEdge === RESIZABLE_EDGE.BOTTOM ? AXIS.Y : AXIS.X
     const reverse = resizableEdge === RESIZABLE_EDGE.LEFT || resizableEdge === RESIZABLE_EDGE.TOP ? false : true
     const visible = resizableEdge !== RESIZABLE_EDGE.NONE
-    const draggableStyle = this.getHandleStyle(axis, draggableSize, resizableEdge)
+    const draggableStyle = this.getHandleStyle(axis, draggableSize, draggableColor, resizableEdge)
 
     return (
       <div style={style}>
