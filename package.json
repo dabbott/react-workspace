@@ -4,13 +4,14 @@
   "description": "Build an immutable tree from a watched directory.",
   "main": "index.js",
   "scripts": {
+    "clean": "rm -rf lib/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "example": "webpack-dev-server --config webpack/webpack.dev.config.js --inline --hot --colors --quiet",
     "build-example": "webpack --config webpack/webpack.prod.config.js --sort-assets-by --progress",
     "analyze-example": "webpack --config webpack/webpack.prod.config.js --sort-assets-by --progress --json | webpack-bundle-size-analyzer",
     "start": "babel src/ -d lib/ --presets es2015,react,stage-0 --source-maps inline --watch",
     "build": "babel src/ -d lib/ --presets es2015,react,stage-0 --source-maps inline",
-    "prepublish": "npm run build",
+    "prepublish": "npm run clean && npm run build",
     "gh-pages": "make"
   },
   "files": [
