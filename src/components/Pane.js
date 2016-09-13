@@ -18,6 +18,7 @@ export default class extends Component {
   static defaultProps = {
     size: 200,
     draggableSize: 3,
+    draggableColor: 'transparent',
     min: 100,
     max: 400,
     resizableEdge: RESIZABLE_EDGE.NONE,
@@ -25,14 +26,14 @@ export default class extends Component {
     onResize: () => {},
   }
 
-  getHandleStyle(axis, draggableSize, resizableEdge) {
+  getHandleStyle(axis, draggableSize, draggableColor, resizableEdge) {
     const style = {
       zIndex: 10000,
       position: 'absolute',
       width: axis === AXIS.X ? draggableSize : '100%',
       height: axis === AXIS.Y ? draggableSize : '100%',
       cursor: axis === AXIS.X ? 'col-resize' : 'row-resize',
-      backgroundColor: 'red',
+      backgroundColor: draggableColor,
     }
 
     switch (resizableEdge) {
@@ -48,11 +49,11 @@ export default class extends Component {
   }
 
   render() {
-    const {style, resizableEdge, draggableSize, children, min, max, size, onResize} = this.props
+    const {style, resizableEdge, draggableSize, children, min, max, size, onResize, draggableColor} = this.props
     const axis = resizableEdge === RESIZABLE_EDGE.TOP || resizableEdge === RESIZABLE_EDGE.BOTTOM ? AXIS.Y : AXIS.X
     const reverse = resizableEdge === RESIZABLE_EDGE.LEFT || resizableEdge === RESIZABLE_EDGE.TOP ? false : true
     const visible = resizableEdge !== RESIZABLE_EDGE.NONE
-    const draggableStyle = this.getHandleStyle(axis, draggableSize, resizableEdge)
+    const draggableStyle = this.getHandleStyle(axis, draggableSize, draggableColor, resizableEdge)
 
     return (
       <div style={style}>

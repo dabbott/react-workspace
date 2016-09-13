@@ -88,6 +88,7 @@ export const applyLayoutMap = (
   layoutTree,
   updateFunc,
   layoutMap = {},
+  draggableOptions,
   keyPath = '',
   resizableEdge = 'none'
 ) => {
@@ -122,6 +123,7 @@ export const applyLayoutMap = (
           layoutTree,
           updateFunc,
           layoutMap,
+          draggableOptions,
           childKeyPath,
           props.resizable || props['data-resizable'] ?
             getResizableEdge(style.flexDirection) :
@@ -160,6 +162,8 @@ export const applyLayoutMap = (
           key={key}
           min={min}
           max={max}
+          draggableSize={draggableOptions.size}
+          draggableColor={draggableOptions.color}
           size={layout[dimension]}
           resizableEdge={lastChild ? 'none' : resizableEdge}
           style={{...layout, position: 'absolute'}}
@@ -185,8 +189,8 @@ export const applyLayoutMap = (
     .filter(x => x)
 }
 
-export const renderWithLayoutTree = (children, layoutTree, updateFunc) => {
+export const renderWithLayoutTree = (children, layoutTree, updateFunc, draggableOptions) => {
   const layoutMap = buildLayoutMap(layoutTree)
 
-  return applyLayoutMap(children, layoutTree, updateFunc, layoutMap)
+  return applyLayoutMap(children, layoutTree, updateFunc, layoutMap, draggableOptions)
 }

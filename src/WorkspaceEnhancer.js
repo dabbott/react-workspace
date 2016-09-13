@@ -73,7 +73,16 @@ function getStorageKey(workspaceId) {
   return `REACT_WORKSPACE:${workspaceId}`
 }
 
-export default function enhanceComponent(component, workspaceId = 'DEFAULT', options = {}) {
+const defaultOptions = {
+  draggable: {
+    size: 3,
+    color: 'transparent',
+  }
+}
+
+export default function enhanceComponent(component, workspaceId = 'DEFAULT', options = defaultOptions) {
+
+  options.draggable = {...defaultOptions.draggable, ...options.draggable}
 
   let ComposedComponent = component
 
@@ -137,7 +146,7 @@ export default function enhanceComponent(component, workspaceId = 'DEFAULT', opt
                 layout: this._overrides,
               })
             },
-            options.debug,
+            options.draggable || {},
           )}
         </div>
       )

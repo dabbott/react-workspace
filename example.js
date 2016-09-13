@@ -72,7 +72,9 @@ class Root extends Component {
   }
 }
 
-const EnhancedRoot = Enhancer(Root, 'test')
+const EnhancedRoot = Enhancer(Root, 'test', {
+  draggable: {color: 'red'},
+})
 
 ReactDOM.render(
   <EnhancedRoot />,
