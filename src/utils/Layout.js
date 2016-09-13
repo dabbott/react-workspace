@@ -48,7 +48,6 @@ export const overrideLayout = (layoutTree, overrides) => {
     const node = KeyPath.getElementByKeyPath(layoutTree, keyPath)
 
     if (node) {
-      // console.log('overriding', keyPath)
       node.style = {...node.style, ...overrides[keyPath]}
     }
   })
