@@ -1,13 +1,16 @@
 {
   "name": "react-workspace",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Build an immutable tree from a watched directory.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack/webpack.prod.config.js --sort-assets-by --progress",
-    "start": "webpack-dev-server --config webpack/webpack.dev.config.js --inline --hot --colors --quiet",
-    "analyze": "webpack --config webpack/webpack.prod.config.js --sort-assets-by --progress --json | webpack-bundle-size-analyzer",
+    "example": "webpack-dev-server --config webpack/webpack.dev.config.js --inline --hot --colors --quiet",
+    "build-example": "webpack --config webpack/webpack.prod.config.js --sort-assets-by --progress",
+    "analyze-example": "webpack --config webpack/webpack.prod.config.js --sort-assets-by --progress --json | webpack-bundle-size-analyzer",
+    "start": "babel src/ -d lib/ --presets es2015,react,stage-0 --source-maps inline --watch",
+    "build": "babel src/ -d lib/ --presets es2015,react,stage-0 --source-maps inline",
+    "prepublish": "npm run build",
     "gh-pages": "make"
   },
   "author": "Devin Abbott <devinabbott@gmail.com>",

@@ -2,7 +2,7 @@ BIN = ./node_modules/.bin
 
 publish-gh-pages:
 	git checkout master
-	npm run build
+	npm run build-example
 	git checkout -b gh-pages
 	git add --all *-bundle.js
 	git commit -m "New release"
