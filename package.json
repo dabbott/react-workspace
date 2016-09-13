@@ -13,6 +13,10 @@
     "prepublish": "npm run build",
     "gh-pages": "make"
   },
+  "files": [
+    "index.js",
+    "lib"
+  ],
   "author": "Devin Abbott <devinabbott@gmail.com>",
   "license": "MIT",
   "dependencies": {
