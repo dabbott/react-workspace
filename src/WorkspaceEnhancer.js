@@ -23,7 +23,7 @@
 import React, { Component, PropTypes } from 'react'
 import cssLayout from 'css-layout'
 
-import Utils from './utils'
+import { Layout, LocalStorage } from './utils'
 
 const styles = {
   reset: {
@@ -69,7 +69,11 @@ function isStateless(component) {
   return !component.render && !(component.prototype && component.prototype.render)
 }
 
-export default function enhanceComponent(component) {
+function getStorageKey(workspaceId) {
+  return `REACT_WORKSPACE:${workspaceId}`
+}
+
+export default function enhanceComponent(component, workspaceId = 'DEFAULT', options = {}) {
 
   let ComposedComponent = component
 
@@ -91,7 +95,10 @@ export default function enhanceComponent(component) {
       super(...arguments)
 
       this.state = this.state || {}
-      this._overrides = {}
+
+      const saved = LocalStorage.loadObject(getStorageKey(workspaceId))
+      this._overrides = saved.layout || {}
+
       this._workspaceIsMounted = true
     }
 
@@ -105,27 +112,32 @@ export default function enhanceComponent(component) {
 
     render() {
       const renderedElement = super.render()
-      const layoutTree = Utils.extractLayoutTree(renderedElement)[0]
+      const layoutTree = Layout.extractLayoutTree(renderedElement)[0]
 
       // Apply user-specified dimensions to styles
-      Utils.overrideLayout(layoutTree, this._overrides)
+      Layout.overrideLayout(layoutTree, this._overrides)
 
       // Compute the entire layout
       cssLayout(layoutTree)
 
       return (
         <div style={styles.reset}>
-          {Utils.renderWithLayoutTree(
+          {Layout.renderWithLayoutTree(
             renderedElement,
             layoutTree,
             ({keyPath, style}) => {
               this._overrides[keyPath] = {
                 ...this._overrides[keyPath],
-                ...style
+                ...style,
               }
 
               this.forceUpdate()
-            }
+              LocalStorage.saveObject(getStorageKey(workspaceId), {
+                version: 1,
+                layout: this._overrides,
+              })
+            },
+            options.debug,
           )}
         </div>
       )
