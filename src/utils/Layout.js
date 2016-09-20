@@ -165,7 +165,12 @@ export const applyLayoutMap = (
           draggableColor={draggableOptions.color}
           size={layout[dimension]}
           resizableEdge={lastChild ? 'none' : resizableEdge}
-          style={{...layout, position: 'absolute'}}
+          style={{
+            ...layout,
+            position: 'absolute',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
           onResize={(value) => {
 
             // TODO When does this occur?
