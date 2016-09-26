@@ -80,7 +80,7 @@ const defaultOptions = {
   }
 }
 
-export default function enhanceComponent(component, workspaceId = 'DEFAULT', options = defaultOptions) {
+export default (workspaceId = 'DEFAULT', options = defaultOptions) => function enhanceComponent(component) {
 
   options.draggable = {...defaultOptions.draggable, ...options.draggable}
 

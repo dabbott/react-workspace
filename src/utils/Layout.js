@@ -60,7 +60,7 @@ export const calculateElementUpdate = (layoutTree, keyPath, resizableEdge, value
   const dimension = resizableEdge === 'right' ? 'width' : 'height'
   const delta = value - node.layout[dimension]
 
-  // Find the element with a fixed width or height and edit that element
+  // Find the element with a fixed width or height and edit that element.
   if (typeof node.style[dimension] === 'number') {
     return {
       keyPath: node.keyPath,
@@ -71,9 +71,12 @@ export const calculateElementUpdate = (layoutTree, keyPath, resizableEdge, value
       keyPath: next.keyPath,
       style: {[dimension]: next.style[dimension] - delta},
     }
+  // If none exists, edit the first element, setting flex to 0.
   } else {
-    throw new Error(`React Workspace: One of the elements being resized
-      must have fixed dimensions.`)
+    return {
+      keyPath: node.keyPath,
+      style: {[dimension]: value, flex: 0},
+    }
   }
 }
 
