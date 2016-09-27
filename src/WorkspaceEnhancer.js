@@ -100,10 +100,15 @@ export default (workspaceId = 'DEFAULT', options = defaultOptions) => function e
 
     static _isWorkspaceEnhanced = true
 
-    constructor() {
+    constructor(props) {
       super(...arguments)
 
       this.state = this.state || {}
+
+      // Settings workspaceId as a prop will override the one passed via enhancer
+      if (props.workspaceId) {
+        workspaceId = props.workspaceId
+      }
 
       const saved = LocalStorage.loadObject(getStorageKey(workspaceId))
       this._overrides = saved.layout || {}
