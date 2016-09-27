@@ -22,6 +22,7 @@ export const extractLayoutTree = (children = [], keyPath = '') => {
         keyPath: childKeyPath,
         style: clone(props.style),
         children: extractLayoutTree(props.children, childKeyPath),
+        resizeMode: props['data-resize-mode'],
       }
     })
 }
@@ -43,7 +44,42 @@ export const buildLayoutMap = (children, layoutMap = {}) => {
   return layoutMap
 }
 
-export const overrideLayout = (layoutTree, overrides) => {
+const getFlexOverride = (child, overrides) => {
+  const override = overrides[child.keyPath]
+  return override && override.flex
+}
+
+// Handle adding new children to %-based layouts.
+// We need to give large flex dimensions to new children, since new children
+// likely start with {flex: 1}. So set flex to the average of previously-measured
+// siblings.
+const normalizePercentDimensions = (layoutTree, overrides) => {
+  const {children, resizeMode} = layoutTree
+
+  if (resizeMode === '%') {
+    const old = children.filter(child => getFlexOverride(child, overrides))
+
+    // There are old children, and more have been added
+    if (old.length > 0 && children.length > old.length) {
+
+      // Calculate the sum of children with overrides
+      const sum = old
+        .map(child => getFlexOverride(child, overrides))
+        .reduce((acc, value) => acc + value, 0)
+
+      const average = Math.round(sum / old.length)
+
+      // Set flex to the average for children without a flex override
+      children.forEach(child => {
+        if (!getFlexOverride(child, overrides)) {
+          child.style = {...child.style, flex: average}
+        }
+      })
+    }
+  }
+}
+
+const applyLayoutOverrides = (layoutTree, overrides) => {
   Object.keys(overrides).forEach((keyPath) => {
     const node = KeyPath.getElementByKeyPath(layoutTree, keyPath)
 
@@ -51,6 +87,11 @@ export const overrideLayout = (layoutTree, overrides) => {
       node.style = {...node.style, ...overrides[keyPath]}
     }
   })
+}
+
+export const overrideLayout = (layoutTree, overrides) => {
+  applyLayoutOverrides(layoutTree, overrides)
+  normalizePercentDimensions(layoutTree, overrides)
 }
 
 export const calculateElementUpdate = (layoutTree, keyPath, resizableEdge, value) => {
@@ -80,6 +121,40 @@ export const calculateElementUpdate = (layoutTree, keyPath, resizableEdge, value
   }
 }
 
+// Elements resized in percent mode are given flex values equal to their dimensions.
+// This allows adding/removing elements and resizing the parent, while the children
+// maintain the same relative sizes.
+export const calculatePercentUpdates = (layoutTree, parentKeyPath, keyPath, resizableEdge, value) => {
+  const parentNode = KeyPath.getElementByKeyPath(layoutTree, parentKeyPath)
+  const node = KeyPath.getElementByKeyPath(layoutTree, keyPath)
+  const next = KeyPath.getNextElementByKeyPath(layoutTree, keyPath)
+
+  const dimension = resizableEdge === 'right' ? 'width' : 'height'
+  const delta = value - node.layout[dimension]
+
+  // Create an update for each child
+  return parentNode.children.map(child => {
+    const {keyPath, layout} = child
+
+    // Use the existing value
+    let value = layout[dimension]
+
+    // Update the two elements being resized by adding or removing the delta
+    if (keyPath === node.keyPath) {
+      value = layout[dimension] + delta
+    } else if (keyPath === next.keyPath) {
+      value = layout[dimension] - delta
+    }
+
+    // Create a change that sets the flex to the dimension value, which immitates
+    // percent-based layout
+    return {
+      keyPath,
+      style: {flex: value}
+    }
+  })
+}
+
 export const getResizableEdge = (flexDirection) => {
   const direction = flexDirection ? flexDirection : 'column'
   return direction === 'column' ? 'bottom' : 'right'
@@ -92,7 +167,8 @@ export const applyLayoutMap = (
   layoutMap = {},
   draggableOptions,
   keyPath = '',
-  resizableEdge = 'none'
+  resizableEdge = 'none',
+  resizeMode
 ) => {
   children = React.Children.toArray(children)
 
@@ -112,6 +188,11 @@ export const applyLayoutMap = (
       const layout = layoutMap[childKeyPath].layout
       const lastChild = i === children.length - 1
 
+      const childResizableEdge = props.resizable || props['data-resizable'] ?
+        getResizableEdge(style.flexDirection) : 'none'
+
+      const childResizeMode = props['data-resize-mode']
+
       const cloned = React.cloneElement(child, {
         style: {
           ...style,
@@ -127,9 +208,8 @@ export const applyLayoutMap = (
           layoutMap,
           draggableOptions,
           childKeyPath,
-          props.resizable || props['data-resizable'] ?
-            getResizableEdge(style.flexDirection) :
-            'none'
+          childResizableEdge,
+          childResizeMode
         ),
         width: layout.width,
         height: layout.height,
@@ -179,14 +259,15 @@ export const applyLayoutMap = (
             // TODO When does this occur?
             if (!childKeyPath) return
 
-            const update = calculateElementUpdate(
-              layoutTree,
-              childKeyPath,
-              resizableEdge,
-              value
-            )
+            let updates
 
-            updateFunc(update)
+            if (resizeMode === '%') {
+              updates = calculatePercentUpdates(layoutTree, keyPath, childKeyPath, resizableEdge, value)
+            } else {
+              updates = [ calculateElementUpdate(layoutTree, childKeyPath, resizableEdge, value) ]
+            }
+
+            updateFunc(updates)
           }}
         >
           {cloned}

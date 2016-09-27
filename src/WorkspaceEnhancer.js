@@ -134,11 +134,13 @@ export default (workspaceId = 'DEFAULT', options = defaultOptions) => function e
           {Layout.renderWithLayoutTree(
             renderedElement,
             layoutTree,
-            ({keyPath, style}) => {
-              this._overrides[keyPath] = {
-                ...this._overrides[keyPath],
-                ...style,
-              }
+            (updates) => {
+              updates.forEach(({keyPath, style}) => {
+                this._overrides[keyPath] = {
+                  ...this._overrides[keyPath],
+                  ...style,
+                }
+              })
 
               this.forceUpdate()
               LocalStorage.saveObject(getStorageKey(workspaceId), {
